@@ -7,7 +7,8 @@
     </h1>
     <!-- Display error if fetch fails -->
     <div v-if="error">
-      <p>Error: {{ error }}</p>
+      <!-- Display error message if the API call has failed -->
+      <p>Error: {{ error.message }}</p>
     </div>
     <!-- Display image list if data is loaded -->
     <div v-else class="image-list" style="display: flex; flex-wrap: wrap; gap: 1rem;">
@@ -28,10 +29,7 @@
 </template>
 
 <script setup lang="ts">
-// Import necessary Vue functions for reactivity and lifecycle hooks
-import { ref, onMounted } from 'vue';
-
-// Define the TypeScript interface for the image data
+// Define TypeScript interface for ImageData
 interface ImageData {
   id: number;
   title: string;
@@ -40,31 +38,16 @@ interface ImageData {
   updated_at: string;
 }
 
-// Reactive variable to store the list of images fetched from the API
-const images = ref<ImageData[]>([]);
-
-// Reactive variable to store any error message during fetching
-const error = ref<string | null>(null);
-
-// Define the API base URL
-const apiBaseUrl = 'http://localhost:8080';
-
-// Fetch the image list from the backend API when the component is mounted
-onMounted(async () => {
-  try {
-    // Perform a GET request to the /images endpoint
-    const res = await fetch(`${apiBaseUrl}/images`);
-    if (!res.ok) {
-      // Throw an error if the response is not ok
-      throw new Error('Failed to fetch images');
-    }
-    // Parse and set the JSON data to the images reactive variable
-    images.value = await res.json();
-  } catch (err: any) {
-    // Set the error message to the error reactive variable
-    error.value = err.message || 'Unknown error occurred while fetching images';
-  }
+// Use useAsyncData for SSR data fetching in Nuxt 3
+// This fetch is executed on the server-side during SSR, and the data is hydrated on the client.
+const { data: images, error } = await useAsyncData<ImageData[]>('images', async () => {
+  // $fetch is Nuxt 3's enhanced fetch which works both server- and client-side
+  return await $fetch('http://localhost:8080/images');
 });
+
+// Define the API base URL (same as in the fetched URL)
+// This is used to construct the complete image path
+const apiBaseUrl = 'http://localhost:8080';
 </script>
 
 <style>
