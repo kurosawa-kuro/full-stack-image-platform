@@ -14,7 +14,7 @@ GET {{localBaseUrl}}/images
 
 
 ### /images/:id
-GET {{localBaseUrl}}/images/6
+GET {{localBaseUrl}}/images/49
 
 
 ### Create one image with image-file using Prisma Client
