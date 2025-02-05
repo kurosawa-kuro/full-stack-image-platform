@@ -5,31 +5,16 @@
     <h1 style="font-size: 1.5rem; font-weight: bold; text-align: center;">
       Image Platform
     </h1>
-    <!-- Display error if fetch fails -->
-    <div v-if="error">
-      <!-- Display error message if the API call has failed -->
-      <p>Error: {{ error.message }}</p>
-    </div>
-    <!-- Display image list if data is loaded -->
-    <div v-else class="image-list" style="display: flex; flex-wrap: wrap; gap: 1rem;">
-      <div
-        v-for="image in images"
-        :key="image.id"
-        style="width: 200px; display: flex; flex-direction: column; align-items: center;"
-      >
-        <img
-          :src="`${apiBaseUrl}${image.image_url}`"
-          alt="Image"
-          style="width: 100%; height: auto;"
-        />
-        <p style="text-align: center; margin-top: 0.5rem;">{{ image.title }}</p>
-      </div>
-    </div>
+    <!-- ImageList component を利用して画像一覧を描画 -->
+    <ImageList :images="images" :error="error" :apiBaseUrl="apiBaseUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
-// Define TypeScript interface for ImageData
+// Import the ImageList component
+import ImageList from '~/components/ImageList.vue';
+
+// Define the TypeScript interface for ImageData
 interface ImageData {
   id: number;
   title: string;
@@ -45,8 +30,7 @@ const { data: images, error } = await useAsyncData<ImageData[]>('images', async 
   return await $fetch('http://localhost:8080/images');
 });
 
-// Define the API base URL (same as in the fetched URL)
-// This is used to construct the complete image path
+// Define the API base URL to construct complete image URL
 const apiBaseUrl = 'http://localhost:8080';
 </script>
 
