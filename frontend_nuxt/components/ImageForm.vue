@@ -38,7 +38,11 @@
 </template>
 
 <script setup lang="ts">
+// Import necessary Vue functions for reactivity
 import { ref } from 'vue';
+
+// Define custom emit function for upload success event
+const emit = defineEmits<{ (e: "uploadSuccess"): void }>();
 
 // Reactive variables to store form inputs
 const title = ref('');
@@ -68,7 +72,7 @@ async function handleSubmit() {
   formData.append('file', file.value);
 
   try {
-    // Send a POST request to the backend images endpoint with the form data
+    // Send POST request to backend images endpoint with the form data
     const res = await fetch(`${apiBaseUrl}/images`, {
       method: 'POST',
       body: formData,
@@ -78,13 +82,16 @@ async function handleSubmit() {
       throw new Error('Failed to upload image');
     }
 
-    // Retrieve response data if necessary
-    const data = await res.json();
-    alert('Image uploaded successfully');
+    // Parse response data if necessary
+    await res.json();
+    // alert('Image uploaded successfully');
 
     // Optionally, reset input fields after successful submission
     title.value = '';
     file.value = null;
+
+    // Emit custom event to notify parent component for refreshing data
+    emit("uploadSuccess");
   } catch (error: any) {
     alert(error.message || 'An error occurred during upload');
   }

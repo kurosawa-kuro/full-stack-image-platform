@@ -6,7 +6,7 @@
       Image Platform
     </h1>
     <!-- ImageForm component を利用して画像を投稿 -->
-    <ImageForm />
+    <ImageForm @uploadSuccess="onUploadSuccess" />
     <!-- ImageList component を利用して画像一覧を描画 -->
     <ImageList :images="images" :error="error" :apiBaseUrl="apiBaseUrl" />
   </div>
@@ -27,13 +27,19 @@ interface ImageData {
 
 // Use useAsyncData for SSR data fetching in Nuxt 3
 // This fetch is executed on the server-side during SSR, and the data is hydrated on the client.
-const { data: images, error } = await useAsyncData<ImageData[]>('images', async () => {
+const { data: images, error, refresh } = await useAsyncData<ImageData[]>('images', async () => {
   // $fetch is Nuxt 3's enhanced fetch which works both server- and client-side
   return await $fetch('http://localhost:8080/images');
 });
 
 // Define the API base URL to construct complete image URL
 const apiBaseUrl = 'http://localhost:8080';
+
+// Handler function triggered when ImageForm component emits uploadSuccess event.
+// This will call the refresh method to re-fetch the image list.
+function onUploadSuccess() {
+  refresh();
+}
 </script>
 
 <style>
