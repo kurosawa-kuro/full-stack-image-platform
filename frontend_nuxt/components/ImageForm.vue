@@ -41,56 +41,75 @@
 // Import necessary Vue functions for reactivity
 import { ref } from 'vue';
 
-// Define custom emit function for upload success event
+// Define custom emit event for upload success
 const emit = defineEmits<{ (e: "uploadSuccess"): void }>();
 
-// Reactive variables to store form inputs
+// Constants
+const apiBaseUrl = 'http://localhost:8080';
+
+// Reactive variables for form inputs
 const title = ref('');
 const file = ref<File | null>(null);
 
-// Define the backend API base URL
-const apiBaseUrl = 'http://localhost:8080';
-
-// Handle file input change event
-function handleFileChange(event: Event) {
+/**
+ * Handle file input changes.
+ * Extracts the selected file from event.
+ */
+function handleFileChange(event: Event): void {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
     file.value = target.files[0];
   }
 }
 
-// Handle form submission event
-async function handleSubmit() {
+/**
+ * Upload image to the backend using FormData.
+ * @param formData - The FormData containing title and file.
+ * @returns Response data in JSON format.
+ */
+async function uploadImage(formData: FormData): Promise<any> {
+  const response = await fetch(`${apiBaseUrl}/images`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) {
+    throw new Error('Failed to upload image');
+  }
+  return await response.json();
+}
+
+/**
+ * Reset the form inputs.
+ */
+function resetForm(): void {
+  title.value = '';
+  file.value = null;
+}
+
+/**
+ * Handle form submission.
+ * Validates file selection, uploads image, resets form and emits success event.
+ */
+async function handleSubmit(): Promise<void> {
+  // Validate that a file is selected
   if (!file.value) {
     alert('Please select a file to upload');
     return;
   }
-
-  // Create FormData object and append title and file
+  
+  // Create FormData and append title and file
   const formData = new FormData();
   formData.append('title', title.value);
   formData.append('file', file.value);
-
+  
   try {
-    // Send POST request to backend images endpoint with the form data
-    const res = await fetch(`${apiBaseUrl}/images`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to upload image');
-    }
-
-    // Parse response data if necessary
-    await res.json();
-    // alert('Image uploaded successfully');
-
-    // Optionally, reset input fields after successful submission
-    title.value = '';
-    file.value = null;
-
-    // Emit custom event to notify parent component for refreshing data
+    // Execute the image upload process
+    await uploadImage(formData);
+    
+    // Reset form data after successful upload
+    resetForm();
+    
+    // Emit an event to inform parent component about the successful upload
     emit("uploadSuccess");
   } catch (error: any) {
     alert(error.message || 'An error occurred during upload');
