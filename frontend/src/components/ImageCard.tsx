@@ -15,7 +15,6 @@ const ImageCard: FC<{ image: ImageType }> = ({ image }) => {
   return (
     <div className="border p-4 rounded shadow">
       <h2 className="mb-2 text-xl">{image.title}</h2>
-      {/* Image url is assumed to be accessible as a static asset or via proper loader configuration */}
       <Image 
         src={`http://localhost:8080${image.image_url}`} 
         alt={image.title} 
