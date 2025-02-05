@@ -9,3 +9,21 @@
 ### /
 GET {{localBaseUrl}}/
 
+
+### /images
+GET {{localBaseUrl}}/images
+
+
+### /images/:id
+GET {{localBaseUrl}}/images/6
+
+
+###  create one image using Prisma Client
+POST {{localBaseUrl}}/images
+Content-Type: application/json
+
+{
+    "title": "Test Image",
+    "image_url": "https://example.com/images/test.jpg"
+}
+
