@@ -79,7 +79,7 @@ export default function ImageForm() {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 rounded p-2"
+          className="mt-1 block w-full border border-gray-300 rounded p-2 text-black"
           placeholder="Enter image title"
           required
         />
