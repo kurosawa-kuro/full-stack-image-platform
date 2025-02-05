@@ -13,6 +13,9 @@
 import ImageList from '~/components/ImageList.vue';
 import ImageForm from '~/components/ImageForm.vue';
 
+// 定義: APIのベースURL
+const apiBaseUrl = 'http://localhost:8080';
+
 // Define TypeScript interface for image data.
 interface ImageData {
   id: number;
@@ -24,23 +27,20 @@ interface ImageData {
 
 /**
  * Fetch images from the API.
- * Encapsulates the API fetching logic to allow easy modification and testing.
+ * Utilize apiBaseUrl to construct the full API URL, which makes it easier to update the endpoint in one place.
  */
 async function fetchImages(): Promise<ImageData[]> {
-  // $fetch works both on server- and client-side in Nuxt 3.
-  return await $fetch('http://localhost:8080/images');
+  // $fetch works on both server- and client-side in Nuxt 3.
+  return await $fetch(`${apiBaseUrl}/images`);
 }
 
 // Use useAsyncData for SSR data fetching in Nuxt 3.
 // The data is fetched on the server during SSR and later hydrated on the client.
 const { data: images, error, refresh } = await useAsyncData<ImageData[]>('images', fetchImages);
 
-// Define constant for API base URL.
-const apiBaseUrl = 'http://localhost:8080';
-
 /**
  * Handle upload success event.
- * This method refreshes the image list by calling refresh from useAsyncData.
+ * Refreshes the image list upon successful upload.
  */
 function handleUploadSuccess(): void {
   refresh();
