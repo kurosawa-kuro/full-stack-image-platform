@@ -1,10 +1,36 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { PrismaClient } from '@prisma/client'; // Import Prisma Client
+import { PrismaClient } from '@prisma/client'
+import { serveStatic } from 'hono/serve-static'
+import { logger } from 'hono/logger'
+import { createWriteStream } from 'fs'
+import { readFile } from 'fs/promises'
+import { extname, join } from 'path'
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();
+
+// Define a minimal "getContent" function for static file serving
+const getContent = async (filePath: string, c: any): Promise<Response | null> => {
+  try {
+    const data = await readFile(filePath);
+    const ext = extname(filePath);
+    const contentTypes: Record<string, string> = {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+    };
+    const contentType = contentTypes[ext] || 'application/octet-stream';
+    return new Response(data, { headers: { 'Content-Type': contentType } });
+  } catch (err) {
+    return null;
+  }
+};
 
 // Function to create CORS middleware configuration
 function createCorsMiddleware() {
@@ -49,14 +75,61 @@ function setupRoutes(app: Hono) {
     return c.json(image);
   });
 
-  // create one image using Prisma Client
+  // create one image with image-file using Prisma Client
   app.post('/images', async (c) => {
-    const { title, image_url } = await c.req.json();
-    const image = await prisma.images.create({
-      data: { title, image_url },
-    });
-    return c.json(image);
+    try {
+      // デバッグ用：Content-Typeヘッダーをログ出力
+      console.log("Content-Type:", c.req.header("content-type"));
+      
+      // FormDataを解析する
+      const formData = await c.req.formData();
+      
+      // フィールド 'file' と 'title' で取得する
+      const file = formData.get('file') as File;
+      if (!file) {
+        return c.json({ error: 'No file uploaded' }, 400);
+      }
+      
+      const title = (formData.get('title') as string) || 'Untitled';
+      
+      // ファイル名を生成
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const filePath = join(process.cwd(), 'public', 'upload', fileName);
+      
+      // ファイルを保存
+      const arrayBuffer = await file.arrayBuffer();
+      const stream = createWriteStream(filePath);
+      stream.write(Buffer.from(arrayBuffer));
+      stream.end();
+      
+      // データベースに保存
+      const image = await prisma.images.create({
+        data: {
+          title,
+          image_url: `/upload/${fileName}`,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      });
+      return c.json(image);
+      
+    } catch (err) {
+      // エラー発生時、リクエストボディのテキストを出力してデバッグする
+      try {
+        const raw = await c.req.text();
+        console.log("Raw body text:", raw);
+      } catch (e) {
+        console.log("Failed to read raw body:", e);
+      }
+      console.error("Failed to parse form data:", err);
+      return c.json({ error: 'Invalid form data' }, 400);
+    }
   });
+
+  // Add static file serving with getContent
+  app.use('/upload/*', serveStatic({ root: './public', getContent }));
+  return app;
 }
 
 // Function to initialize the Hono application
@@ -66,6 +139,8 @@ function initApp(): Hono {
   app.use("/*", createCorsMiddleware());
   // Set up routes for the application
   setupRoutes(app);
+  // Add logger middleware
+  app.use('*', logger());
   return app;
 }
 
