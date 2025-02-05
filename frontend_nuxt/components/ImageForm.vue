@@ -1,7 +1,7 @@
 <template>
   <form 
     @submit.prevent="handleSubmit" 
-    style="display: flex; flex-direction: column; gap: 1rem; background: #222; padding: 1rem; border-radius: 0.5rem;"
+    style="display: flex; flex-direction: column; gap: 1rem; background: #222; padding: 1rem; border-radius: 0.5rem; width: 50%; margin: 0 auto;"
   >
     <div>
       <label for="title" style="display: block; margin-bottom: 0.5rem; color: #fff;">

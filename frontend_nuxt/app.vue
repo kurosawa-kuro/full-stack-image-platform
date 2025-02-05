@@ -5,9 +5,8 @@
     <h1 style="font-size: 1.5rem; font-weight: bold; text-align: center;">
       Image Platform
     </h1>
-    <!-- ImageForm component を利用して画像を投稿 -->
+
     <ImageForm @uploadSuccess="onUploadSuccess" />
-    <!-- ImageList component を利用して画像一覧を描画 -->
     <ImageList :images="images" :error="error" :apiBaseUrl="apiBaseUrl" />
   </div>
 </template>
@@ -16,6 +15,7 @@
 // Import the ImageList component
 import ImageList from '~/components/ImageList.vue';
 import ImageForm from '~/components/ImageForm.vue';
+
 // Define the TypeScript interface for ImageData
 interface ImageData {
   id: number;
