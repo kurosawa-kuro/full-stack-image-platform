@@ -79,7 +79,7 @@ function setupRoutes(app: Hono) {
   app.post('/images', async (c) => {
     try {
       // デバッグ用：Content-Typeヘッダーをログ出力
-      console.log("Content-Type:", c.req.header("content-type"));
+      // console.log("Content-Type:", c.req.header("content-type"));
       
       // FormDataを解析する
       const formData = await c.req.formData();
