@@ -9,15 +9,21 @@ import (
 
 // Setup initializes the router and its routes
 func Setup(db *gorm.DB, r *gin.Engine) {
-	// ハンドラーの初期化
+	// Micropost handlers
 	micropostHandler := handler.NewMicropostHandler(db)
-
-	// ルートの設定
-	r.GET("/ping", handler.PingHandler)
 
 	microposts := r.Group("/microposts")
 	{
 		microposts.POST("", micropostHandler.Create)
 		microposts.GET("", micropostHandler.FindAll)
+	}
+
+	// Image handlers
+	imageHandler := handler.NewImageHandler(db)
+
+	images := r.Group("/images")
+	{
+		images.POST("", imageHandler.Create)
+		images.GET("", imageHandler.FindAll)
 	}
 }

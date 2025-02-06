@@ -21,3 +21,19 @@ Content-Type: application/json
 ### Find All Microposts
 GET {{baseUrl}}/microposts
 Content-Type: application/json
+
+###################
+# Images API
+###################
+### Create Image
+POST {{baseUrl}}/images
+Content-Type: application/json
+
+{
+    "title": "test",
+    "image_url": "https://example.com/test.jpg"
+}
+
+### Find All Images
+GET {{baseUrl}}/images
+Content-Type: application/json

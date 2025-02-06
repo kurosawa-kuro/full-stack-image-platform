@@ -29,6 +29,7 @@ func SetupDB() *gorm.DB {
 
 	// Auto-migrate the schema for model.Micropost
 	db.AutoMigrate(&model.Micropost{})
+	db.AutoMigrate(&model.Micropost{}, &model.Image{})
 
 	return db
 }
