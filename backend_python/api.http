@@ -1,0 +1,27 @@
+### ==================== 環境設定 ====================
+@ecsHost = 35.77.48.143
+@localHost = localhost
+@port = 8000
+
+http://35.77.48.143:3000
+
+### Base URLs
+@localBaseUrl = http://{{localHost}}:{{port}}
+
+
+### /health
+GET {{localBaseUrl}}/health
+
+### /predict    
+GET {{localBaseUrl}}/predict
+
+### /predict_onnx
+GET {{localBaseUrl}}/predict_onnx
+
+### /chat
+POST {{localBaseUrl}}/chat
+Content-Type: application/json
+
+{
+  "message": "Hello, how are you?"
+}
