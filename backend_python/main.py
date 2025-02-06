@@ -1,8 +1,8 @@
 # coding: utf-8
 """
-通常のCRUD API
-SQLAlchemyを用いたデータベース操作（update, destroyは不要）
-画像ファイルアップロード対応
+通常のCRUD APIのリファクタリング版
+単一責任原則に則り、各処理を専用の関数に切り分けています。
+ファイル分割禁止のため、全てのコードを一つのファイルにまとめています。
 """
 
 import os
@@ -16,10 +16,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# 環境変数の読み込み
 load_dotenv()
 
-# DB接続設定
+# ================================================================
+# Database Configuration
+# ================================================================
 DATABASE_URL = "sqlite:///./dev.db"
 
 engine = create_engine(
@@ -28,7 +30,9 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# SQLAlchemyのImageモデル
+# ================================================================
+# SQLAlchemy Model
+# ================================================================
 class Image(Base):
     __tablename__ = "images"
     id = Column(Integer, primary_key=True, index=True)
@@ -37,10 +41,12 @@ class Image(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-# テーブルが存在しない場合作成
+# テーブルが存在しない場合、作成
 Base.metadata.create_all(bind=engine)
 
-# Pydanticスキーマ定義
+# ================================================================
+# Pydantic Schemas
+# ================================================================
 class ImageRead(BaseModel):
     id: int
     title: str
@@ -51,7 +57,9 @@ class ImageRead(BaseModel):
     class Config:
         orm_mode = True
 
-# DBセッション取得の依存関数
+# ================================================================
+# Dependency - DB Session
+# ================================================================
 def get_db():
     db = SessionLocal()
     try:
@@ -59,19 +67,64 @@ def get_db():
     finally:
         db.close()
 
+# ================================================================
+# Utility Functions
+# ================================================================
+async def save_uploaded_file(file: UploadFile) -> str:
+    """
+    Save the uploaded file and return its URL path.
+    """
+    try:
+        file_data = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Error reading file data")
+
+    timestamp = int(time.time() * 1000)
+    # Generate a unique filename using timestamp and original filename
+    file_name = f"{timestamp}_{file.filename}"
+    upload_dir = os.path.join(os.getcwd(), "public", "upload")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file_name)
+
+    try:
+        with open(file_path, "wb") as f:
+            f.write(file_data)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to save file")
+    
+    # Return the relative path for the image URL
+    return f"/upload/{file_name}"
+
+def create_db_image(db: Session, title: str, image_url: str) -> Image:
+    """
+    Create a new image record in the database.
+    """
+    new_image = Image(title=title, image_url=image_url)
+    db.add(new_image)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database write failed")
+    db.refresh(new_image)
+    return new_image
+
+# ================================================================
+# FastAPI Application Setup
+# ================================================================
 app = FastAPI()
 
 @app.get("/health")
 def health_check():
     """
-    ヘルスチェック用エンドポイント
+    ヘルスチェックエンドポイント
     """
     return {"status": "healthy"}
 
 @app.get("/images", response_model=List[ImageRead])
 def list_images(db: Session = Depends(get_db)):
     """
-    画像情報の一覧取得エンドポイント
+    Retrieve a list of image records.
     """
     images = db.query(Image).all()
     return images
@@ -79,7 +132,7 @@ def list_images(db: Session = Depends(get_db)):
 @app.get("/images/{image_id}", response_model=ImageRead)
 def get_image(image_id: int, db: Session = Depends(get_db)):
     """
-    IDに紐づく画像情報取得エンドポイント
+    Retrieve a single image record by its ID.
     """
     image = db.query(Image).filter(Image.id == image_id).first()
     if image is None:
@@ -93,28 +146,12 @@ async def create_image(
     db: Session = Depends(get_db)
 ):
     """
-    画像情報の作成エンドポイント
-    マルチパートフォームで受け取ったタイトルとファイルを処理し、画像URLを生成します。
+    Create a new image record by processing multi-part form data.
     """
-    # ファイルの保存処理
-    file_data = await file.read()
-    timestamp = int(time.time() * 1000)
-    # オリジナルのファイル名を利用しユニークな名前を生成
-    file_name = f"{timestamp}_{file.filename}"
-    upload_dir = os.path.join(os.getcwd(), "public", "upload")
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file_name)
-    
-    with open(file_path, "wb") as f:
-        f.write(file_data)
-    
-    # 画像URLを設定。ここでは/public/upload以下のパスを利用します。
-    image_url = f"/upload/{file_name}"
-    
-    db_image = Image(title=title, image_url=image_url)
-    db.add(db_image)
-    db.commit()
-    db.refresh(db_image)
+    # Save uploaded image file and get its URL
+    image_url = await save_uploaded_file(file)
+    # Create image record in the database using the provided title and generated image URL
+    db_image = create_db_image(db, title, image_url)
     return db_image
 
 # ================================================================
@@ -122,5 +159,5 @@ async def create_image(
 # ================================================================
 if __name__ == '__main__':
     import uvicorn
-    # Run the FastAPI application
+    # Start the FastAPI application
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
