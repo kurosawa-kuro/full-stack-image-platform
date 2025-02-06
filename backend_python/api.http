@@ -1,9 +1,5 @@
-### ==================== 環境設定 ====================
-@ecsHost = 35.77.48.143
 @localHost = localhost
 @port = 8000
-
-http://35.77.48.143:3000
 
 ### Base URLs
 @localBaseUrl = http://{{localHost}}:{{port}}
@@ -12,16 +8,27 @@ http://35.77.48.143:3000
 ### /health
 GET {{localBaseUrl}}/health
 
-### /predict    
-GET {{localBaseUrl}}/predict
 
-### /predict_onnx
-GET {{localBaseUrl}}/predict_onnx
+### /images
+GET {{localBaseUrl}}/images
 
-### /chat
-POST {{localBaseUrl}}/chat
-Content-Type: application/json
 
-{
-  "message": "Hello, how are you?"
-}
+### /images/:id
+GET {{localBaseUrl}}/images/49
+
+
+### Create one image with image-file using Prisma Client
+POST {{localBaseUrl}}/images
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="title"
+
+My Image Title api.http from fastapi
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample.png"
+Content-Type: image/png
+
+< ./data/sample.png
+--boundary--
+
