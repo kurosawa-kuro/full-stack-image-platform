@@ -1,0 +1,50 @@
+@baseUrl = http://localhost:8000
+
+#########################
+# Health Check Endpoints
+#########################
+
+### Health Check
+GET {{baseUrl}}/ping
+Content-Type: application/json
+
+#########################
+# Microposts Endpoints
+#########################
+
+### Get All Microposts
+GET {{baseUrl}}/microposts
+Content-Type: application/json
+
+### Create New Micropost
+POST {{baseUrl}}/microposts
+Content-Type: application/json
+
+{
+    "title": "test"
+}
+
+#########################
+# Images Endpoints
+#########################
+
+### Get All Images
+GET {{baseUrl}}/images
+
+### Get Image by ID
+GET {{baseUrl}}/images/49
+
+### Upload New Image
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="title"
+
+My Image Title api.http from fastapi
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample.png"
+Content-Type: image/png
+
+< ./data/sample.png
+--boundary--

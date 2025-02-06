@@ -1,5 +1,21 @@
 
 ```
+text_posts
+- id
+- title
+- created_at
+- updated_at
+
+image_posts
+- id
+- title
+- file_path
+- created_at
+- updated_at
+```
+
+
+```
 erDiagram
     images ||--o{ image_categories : "belongs_to"
     categories ||--o{ image_categories : "belongs_to"
