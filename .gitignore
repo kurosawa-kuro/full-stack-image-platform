@@ -130,3 +130,4 @@ dist
 .pnp.*
 README secret.md
 **/public/upload/**
+**/myenv/**

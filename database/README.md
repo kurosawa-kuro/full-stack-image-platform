@@ -6,6 +6,21 @@ erDiagram
 
     images {
         id integer PK
+        title string
+        image_url string
+        created_at timestamp
+        updated_at timestamp
+    }
+```
+
+
+```
+erDiagram
+    images ||--o{ image_categories : "belongs_to"
+    categories ||--o{ image_categories : "belongs_to"
+
+    images {
+        id integer PK
         image_url string
         created_at timestamp
         updated_at timestamp
