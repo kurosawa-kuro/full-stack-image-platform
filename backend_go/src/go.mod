@@ -1,6 +1,6 @@
 module backend/src
 
-go 1.21.5
+go 1.21
 
 require (
 	github.com/gin-contrib/cors v1.7.2
@@ -24,10 +24,12 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gorm.io/driver/sqlite v1.5.7 // indirect
 )
 
 require (

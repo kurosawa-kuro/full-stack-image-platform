@@ -6,40 +6,28 @@ import (
 
 	"backend/src/model"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func SetupDB() *gorm.DB {
-	// 環境変数名を.envファイルに合わせる
-	host := os.Getenv("POSTGRES_HOSTNAME")
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DB")
-	port := "5432" // PostgreSQLのデフォルトポート
-
-	// Verify that all required variables are present
-	if host == "" || user == "" || password == "" || dbname == "" {
-		panic("Missing required database environment variables")
+	// Use environment variable to specify SQLite database file, default to "database.db"
+	dbFile := os.Getenv("SQLITE_DB")
+	if dbFile == "" {
+		dbFile = "database.db"
 	}
 
-	fmt.Printf("Connecting to PostgreSQL with:\nHost: %s\nUser: %s\nDB: %s\nPort: %s\n",
-		host, user, dbname, port)
+	fmt.Printf("Connecting to SQLite database: %s\n", dbFile)
 
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo",
-		host, user, password, dbname, port,
-	)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 	if err != nil {
 		fmt.Printf("Connection error: %v\n", err)
-		panic("Failed to connect database")
+		panic("Failed to connect to SQLite database")
 	}
 
-	fmt.Println("Successfully connected to database!")
+	fmt.Println("Successfully connected to SQLite database!")
 
-	// マイグレーション
+	// Auto-migrate the schema for model.Micropost
 	db.AutoMigrate(&model.Micropost{})
 
 	return db
